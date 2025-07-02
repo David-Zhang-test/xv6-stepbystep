@@ -15,8 +15,11 @@ void main()
     printf("\n");
     printf("xv6 kernel is booting\n");
     printf("\n");
+    kinit();         // physical page allocator
+    kvminit();       // create kernel page table
+    kvminithart();   // turn on paging
 
-    
+
     printf("cpu %d is booting!\n", cpuid());
     __sync_synchronize();
     started = 1;

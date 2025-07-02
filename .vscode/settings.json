@@ -5,6 +5,14 @@
         "memlayout.h": "c",
         "types.h": "c",
         "param.h": "c",
-        "defs.h": "c"
+        "defs.h": "c",
+        "future": "c",
+        "istream": "c",
+        "mutex": "c",
+        "stop_token": "c",
+        "typeinfo": "c",
+        "*.inc": "c",
+        "elf.h": "c",
+        "cstring": "c"
     }
 }

@@ -9,6 +9,10 @@ OBJS = \
   $K/spinlock.o \
   $K/main.o \
   $K/proc.o \
+  $K/kalloc.o \
+  $K/vm.o \
+  $K/string.o \
+  $K/trampoline.o \
 
 
 # riscv64-unknown-elf- or riscv64-linux-gnu-
