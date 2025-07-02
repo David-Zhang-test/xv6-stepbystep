@@ -13,6 +13,10 @@ OBJS = \
   $K/vm.o \
   $K/string.o \
   $K/trampoline.o \
+  $K/kernelvec.o \
+  $K/plic.o \
+  $K/trap.o \
+  
 
 
 # riscv64-unknown-elf- or riscv64-linux-gnu-

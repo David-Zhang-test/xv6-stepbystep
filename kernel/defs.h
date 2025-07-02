@@ -12,6 +12,9 @@ void            kinit(void);
 int             cpuid(void);
 struct cpu*     mycpu(void);
 void            proc_mapstacks(pagetable_t);
+struct proc*    myproc();
+void            wakeup(void*);
+void            yield(void);
 
 
 // spinlock.c
@@ -36,7 +39,11 @@ int            printf(char*, ...) __attribute__ ((format (printf, 1, 2)));
 void            panic(char*) __attribute__((noreturn));
 void            printfinit(void);
 
-
+// trap.c
+extern uint     ticks;
+void            trapinit(void);
+void            trapinithart(void);
+extern struct spinlock tickslock;
 
 // uart.c
 void            uartinit(void);
@@ -63,3 +70,10 @@ uint64          walkaddr(pagetable_t, uint64);
 int             copyout(pagetable_t, uint64, char *, uint64);
 int             copyin(pagetable_t, char *, uint64, uint64);
 int             copyinstr(pagetable_t, char *, uint64, uint64);
+
+
+// plic.c
+void            plicinit(void);
+void            plicinithart(void);
+int             plic_claim(void);
+void            plic_complete(int);

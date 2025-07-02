@@ -79,16 +79,16 @@ mycpu(void)
   return c;
 }
 
-// // Return the current struct proc *, or zero if none.
-// struct proc*
-// myproc(void)
-// {
-//   push_off();
-//   struct cpu *c = mycpu();
-//   struct proc *p = c->proc;
-//   pop_off();
-//   return p;
-// }
+// Return the current struct proc *, or zero if none.
+struct proc*
+myproc(void)
+{
+  push_off();
+  struct cpu *c = mycpu();
+  struct proc *p = c->proc;
+  pop_off();
+  return p;
+}
 
 // int
 // allocpid()
@@ -508,16 +508,16 @@ mycpu(void)
 //   mycpu()->intena = intena;
 // }
 
-// // Give up the CPU for one scheduling round.
-// void
-// yield(void)
-// {
-//   struct proc *p = myproc();
-//   acquire(&p->lock);
-//   p->state = RUNNABLE;
-//   sched();
-//   release(&p->lock);
-// }
+// Give up the CPU for one scheduling round.
+void
+yield(void)
+{
+  struct proc *p = myproc();
+  acquire(&p->lock);
+  p->state = RUNNABLE;
+  sched();
+  release(&p->lock);
+}
 
 // // A fork child's very first scheduling by scheduler()
 // // will swtch to forkret.
@@ -574,23 +574,23 @@ mycpu(void)
 //   acquire(lk);
 // }
 
-// // Wake up all processes sleeping on chan.
-// // Must be called without any p->lock.
-// void
-// wakeup(void *chan)
-// {
-//   struct proc *p;
+// Wake up all processes sleeping on chan.
+// Must be called without any p->lock.
+void
+wakeup(void *chan)
+{
+  struct proc *p;
 
-//   for(p = proc; p < &proc[NPROC]; p++) {
-//     if(p != myproc()){
-//       acquire(&p->lock);
-//       if(p->state == SLEEPING && p->chan == chan) {
-//         p->state = RUNNABLE;
-//       }
-//       release(&p->lock);
-//     }
-//   }
-// }
+  for(p = proc; p < &proc[NPROC]; p++) {
+    if(p != myproc()){
+      acquire(&p->lock);
+      if(p->state == SLEEPING && p->chan == chan) {
+        p->state = RUNNABLE;
+      }
+      release(&p->lock);
+    }
+  }
+}
 
 // // Kill the process with the given pid.
 // // The victim won't exit until it tries to return

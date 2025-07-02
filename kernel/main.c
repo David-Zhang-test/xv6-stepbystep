@@ -19,6 +19,11 @@ void main()
     kvminit();       // create kernel page table
     kvminithart();   // turn on paging
 
+    trapinit();      // trap vectors
+    trapinithart();  // install kernel trap vector
+    plicinit();      // set up interrupt controller
+    plicinithart();  // ask PLIC for device interrupts
+
 
     printf("cpu %d is booting!\n", cpuid());
     __sync_synchronize();
@@ -27,6 +32,11 @@ void main()
   while(started == 0);
   __sync_synchronize();
   printf("cpu %d is booting!\n", cpuid());
+  kvminithart();    // turn on paging
+  trapinithart();   // install kernel trap vector
+  plicinithart();   // ask PLIC for device interrupts
   }
+
+  intr_on(); // enable interrupts
   while (1);
 }
