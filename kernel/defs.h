@@ -30,6 +30,8 @@ int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
 void            procdump(void);
 void            procinit(void);
 void            userinit(void);
+void            setkilled(struct proc*);
+int             growproc(int n);
 
 // swtch.S
 void            swtch(struct context*, struct context*);
@@ -50,6 +52,15 @@ char*           safestrcpy(char*, const char*, int);
 int             strlen(const char*);
 int             strncmp(const char*, const char*, uint);
 char*           strncpy(char*, const char*, int);
+
+
+// syscall.c
+void            argint(int, int*);
+int             argstr(int, char*, int);
+void            argaddr(int, uint64 *);
+int             fetchstr(uint64, char*, int);
+int             fetchaddr(uint64, uint64*);
+void            syscall();
 
 // printf.c
 int            printf(char*, ...) __attribute__ ((format (printf, 1, 2)));

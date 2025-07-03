@@ -17,6 +17,8 @@ OBJS = \
   $K/kernelvec.o \
   $K/plic.o \
   $K/trap.o \
+  $K/syscall.o \
+  $K/sysproc.o \
 
   
 

@@ -52,16 +52,26 @@ usertrap(void)
   
   if(r_scause() == 8){
     // system call
-    printf("get a syscall from proc %d\n", myproc()->pid);
+
+    // if(killed(p))
+    //   exit(-1);
+
+    // sepc points to the ecall instruction,
+    // but we want to return to the next instruction.
     p->trapframe->epc += 4;
+
+    // an interrupt will change sepc, scause, and sstatus,
+    // so enable only now that we're done with those registers.
     intr_on();
+
+    syscall();
 
   } else if((which_dev = devintr()) != 0){
     // ok
   } else {
     printf("usertrap(): unexpected scause 0x%lx pid=%d\n", r_scause(), p->pid);
     printf("            sepc=0x%lx stval=0x%lx\n", r_sepc(), r_stval());
-    // setkilled(p);
+    setkilled(p);
   }
 
   // if(killed(p))
