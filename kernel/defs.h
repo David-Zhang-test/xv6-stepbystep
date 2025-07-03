@@ -1,12 +1,7 @@
-struct proc;
+
 struct spinlock;
-struct context;
 
 
-// // console.c
-// void            consoleinit(void);
-// void            consoleintr(int);
-// void            consputc(int);
 
 
 // kalloc.c
@@ -28,8 +23,6 @@ int             either_copyout(int user_dst, uint64 dst, void *src, uint64 len);
 int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
 void            procdump(void);
 
-// swtch.S
-void            swtch(struct context*, struct context*);
 
 // spinlock.c
 void            acquire(struct spinlock*);

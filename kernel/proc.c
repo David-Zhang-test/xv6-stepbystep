@@ -488,36 +488,36 @@ myproc(void)
 // // be proc->intena and proc->noff, but that would
 // // break in the few places where a lock is held but
 // // there's no process.
-void
-sched(void)
-{
-  int intena;
-  struct proc *p = myproc();
+// void
+// sched(void)
+// {
+//   int intena;
+//   struct proc *p = myproc();
 
-  if(!holding(&p->lock))
-    panic("sched p->lock");
-  if(mycpu()->noff != 1)
-    panic("sched locks");
-  if(p->state == RUNNING)
-    panic("sched running");
-  if(intr_get())
-    panic("sched interruptible");
+//   if(!holding(&p->lock))
+//     panic("sched p->lock");
+//   if(mycpu()->noff != 1)
+//     panic("sched locks");
+//   if(p->state == RUNNING)
+//     panic("sched running");
+//   if(intr_get())
+//     panic("sched interruptible");
 
-  intena = mycpu()->intena;
-  swtch(&p->context, &mycpu()->context);
-  mycpu()->intena = intena;
-}
+//   intena = mycpu()->intena;
+//   swtch(&p->context, &mycpu()->context);
+//   mycpu()->intena = intena;
+// }
 
 // Give up the CPU for one scheduling round.
-void
-yield(void)
-{
-  struct proc *p = myproc();
-  acquire(&p->lock);
-  p->state = RUNNABLE;
-  sched();
-  release(&p->lock);
-}
+// void
+// yield(void)
+// {
+//   struct proc *p = myproc();
+//   acquire(&p->lock);
+//   p->state = RUNNABLE;
+//   sched();
+//   release(&p->lock);
+// }
 
 // // A fork child's very first scheduling by scheduler()
 // // will swtch to forkret.
@@ -545,34 +545,34 @@ yield(void)
 
 // Atomically release lock and sleep on chan.
 // Reacquires lock when awakened.
-void
-sleep(void *chan, struct spinlock *lk)
-{
-  struct proc *p = myproc();
+// void
+// sleep(void *chan, struct spinlock *lk)
+// {
+//   struct proc *p = myproc();
   
-  // Must acquire p->lock in order to
-  // change p->state and then call sched.
-  // Once we hold p->lock, we can be
-  // guaranteed that we won't miss any wakeup
-  // (wakeup locks p->lock),
-  // so it's okay to release lk.
+//   // Must acquire p->lock in order to
+//   // change p->state and then call sched.
+//   // Once we hold p->lock, we can be
+//   // guaranteed that we won't miss any wakeup
+//   // (wakeup locks p->lock),
+//   // so it's okay to release lk.
 
-  acquire(&p->lock);  //DOC: sleeplock1
-  release(lk);
+//   acquire(&p->lock);  //DOC: sleeplock1
+//   release(lk);
 
-  // Go to sleep.
-  p->chan = chan;
-  p->state = SLEEPING;
+//   // Go to sleep.
+//   p->chan = chan;
+//   p->state = SLEEPING;
 
-  sched();
+//   sched();
 
-  // Tidy up.
-  p->chan = 0;
+//   // Tidy up.
+//   p->chan = 0;
 
-  // Reacquire original lock.
-  release(&p->lock);
-  acquire(lk);
-}
+//   // Reacquire original lock.
+//   release(&p->lock);
+//   acquire(lk);
+// }
 
 // Wake up all processes sleeping on chan.
 // Must be called without any p->lock.
