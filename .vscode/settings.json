@@ -13,6 +13,8 @@
         "typeinfo": "c",
         "*.inc": "c",
         "elf.h": "c",
-        "cstring": "c"
+        "cstring": "c",
+        "fcntl.h": "c",
+        "file.h": "c"
     }
 }

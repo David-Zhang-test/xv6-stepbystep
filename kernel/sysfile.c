@@ -13,8 +13,8 @@
 #include "proc.h"
 #include "fs.h"
 #include "sleeplock.h"
-#include "file.h"
-#include "fcntl.h"
+// #include "file.h"
+// #include "fcntl.h"
 
 // // Fetch the nth word-sized system call argument as a file descriptor
 // // and return both the descriptor and the corresponding struct file.
@@ -91,7 +91,7 @@ sys_write(void)
   // if(argfd(0, 0, &f) < 0)
   //   return -1;
 
-  return filewrite(f, p, n);
+  return consolewrite(1, p, n);
 }
 
 // uint64
