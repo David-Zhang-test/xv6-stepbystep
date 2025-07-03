@@ -488,25 +488,25 @@ myproc(void)
 // // be proc->intena and proc->noff, but that would
 // // break in the few places where a lock is held but
 // // there's no process.
-// void
-// sched(void)
-// {
-//   int intena;
-//   struct proc *p = myproc();
+void
+sched(void)
+{
+  int intena;
+  struct proc *p = myproc();
 
-//   if(!holding(&p->lock))
-//     panic("sched p->lock");
-//   if(mycpu()->noff != 1)
-//     panic("sched locks");
-//   if(p->state == RUNNING)
-//     panic("sched running");
-//   if(intr_get())
-//     panic("sched interruptible");
+  if(!holding(&p->lock))
+    panic("sched p->lock");
+  if(mycpu()->noff != 1)
+    panic("sched locks");
+  if(p->state == RUNNING)
+    panic("sched running");
+  if(intr_get())
+    panic("sched interruptible");
 
-//   intena = mycpu()->intena;
-//   swtch(&p->context, &mycpu()->context);
-//   mycpu()->intena = intena;
-// }
+  intena = mycpu()->intena;
+  swtch(&p->context, &mycpu()->context);
+  mycpu()->intena = intena;
+}
 
 // Give up the CPU for one scheduling round.
 void
@@ -543,36 +543,36 @@ yield(void)
 //   usertrapret();
 // }
 
-// // Atomically release lock and sleep on chan.
-// // Reacquires lock when awakened.
-// void
-// sleep(void *chan, struct spinlock *lk)
-// {
-//   struct proc *p = myproc();
+// Atomically release lock and sleep on chan.
+// Reacquires lock when awakened.
+void
+sleep(void *chan, struct spinlock *lk)
+{
+  struct proc *p = myproc();
   
-//   // Must acquire p->lock in order to
-//   // change p->state and then call sched.
-//   // Once we hold p->lock, we can be
-//   // guaranteed that we won't miss any wakeup
-//   // (wakeup locks p->lock),
-//   // so it's okay to release lk.
+  // Must acquire p->lock in order to
+  // change p->state and then call sched.
+  // Once we hold p->lock, we can be
+  // guaranteed that we won't miss any wakeup
+  // (wakeup locks p->lock),
+  // so it's okay to release lk.
 
-//   acquire(&p->lock);  //DOC: sleeplock1
-//   release(lk);
+  acquire(&p->lock);  //DOC: sleeplock1
+  release(lk);
 
-//   // Go to sleep.
-//   p->chan = chan;
-//   p->state = SLEEPING;
+  // Go to sleep.
+  p->chan = chan;
+  p->state = SLEEPING;
 
-//   sched();
+  sched();
 
-//   // Tidy up.
-//   p->chan = 0;
+  // Tidy up.
+  p->chan = 0;
 
-//   // Reacquire original lock.
-//   release(&p->lock);
-//   acquire(lk);
-// }
+  // Reacquire original lock.
+  release(&p->lock);
+  acquire(lk);
+}
 
 // Wake up all processes sleeping on chan.
 // Must be called without any p->lock.
@@ -624,73 +624,73 @@ wakeup(void *chan)
 //   release(&p->lock);
 // }
 
-// int
-// killed(struct proc *p)
-// {
-//   int k;
+int
+killed(struct proc *p)
+{
+  int k;
   
-//   acquire(&p->lock);
-//   k = p->killed;
-//   release(&p->lock);
-//   return k;
-// }
+  acquire(&p->lock);
+  k = p->killed;
+  release(&p->lock);
+  return k;
+}
 
-// // Copy to either a user address, or kernel address,
-// // depending on usr_dst.
-// // Returns 0 on success, -1 on error.
-// int
-// either_copyout(int user_dst, uint64 dst, void *src, uint64 len)
-// {
-//   struct proc *p = myproc();
-//   if(user_dst){
-//     return copyout(p->pagetable, dst, src, len);
-//   } else {
-//     memmove((char *)dst, src, len);
-//     return 0;
-//   }
-// }
+// Copy to either a user address, or kernel address,
+// depending on usr_dst.
+// Returns 0 on success, -1 on error.
+int
+either_copyout(int user_dst, uint64 dst, void *src, uint64 len)
+{
+  struct proc *p = myproc();
+  if(user_dst){
+    return copyout(p->pagetable, dst, src, len);
+  } else {
+    memmove((char *)dst, src, len);
+    return 0;
+  }
+}
 
-// // Copy from either a user address, or kernel address,
-// // depending on usr_src.
-// // Returns 0 on success, -1 on error.
-// int
-// either_copyin(void *dst, int user_src, uint64 src, uint64 len)
-// {
-//   struct proc *p = myproc();
-//   if(user_src){
-//     return copyin(p->pagetable, dst, src, len);
-//   } else {
-//     memmove(dst, (char*)src, len);
-//     return 0;
-//   }
-// }
+// Copy from either a user address, or kernel address,
+// depending on usr_src.
+// Returns 0 on success, -1 on error.
+int
+either_copyin(void *dst, int user_src, uint64 src, uint64 len)
+{
+  struct proc *p = myproc();
+  if(user_src){
+    return copyin(p->pagetable, dst, src, len);
+  } else {
+    memmove(dst, (char*)src, len);
+    return 0;
+  }
+}
 
-// // Print a process listing to console.  For debugging.
-// // Runs when user types ^P on console.
-// // No lock to avoid wedging a stuck machine further.
-// void
-// procdump(void)
-// {
-//   static char *states[] = {
-//   [UNUSED]    "unused",
-//   [USED]      "used",
-//   [SLEEPING]  "sleep ",
-//   [RUNNABLE]  "runble",
-//   [RUNNING]   "run   ",
-//   [ZOMBIE]    "zombie"
-//   };
-//   struct proc *p;
-//   char *state;
+// Print a process listing to console.  For debugging.
+// Runs when user types ^P on console.
+// No lock to avoid wedging a stuck machine further.
+void
+procdump(void)
+{
+  static char *states[] = {
+  [UNUSED]    "unused",
+  [USED]      "used",
+  [SLEEPING]  "sleep ",
+  [RUNNABLE]  "runble",
+  [RUNNING]   "run   ",
+  [ZOMBIE]    "zombie"
+  };
+  struct proc *p;
+  char *state;
 
-//   printf("\n");
-//   for(p = proc; p < &proc[NPROC]; p++){
-//     if(p->state == UNUSED)
-//       continue;
-//     if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
-//       state = states[p->state];
-//     else
-//       state = "???";
-//     printf("%d %s %s", p->pid, state, p->name);
-//     printf("\n");
-//   }
-// }
+  printf("\n");
+  for(p = proc; p < &proc[NPROC]; p++){
+    if(p->state == UNUSED)
+      continue;
+    if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
+      state = states[p->state];
+    else
+      state = "???";
+    printf("%d %s %s", p->pid, state, p->name);
+    printf("\n");
+  }
+}

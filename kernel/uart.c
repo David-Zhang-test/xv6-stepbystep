@@ -48,35 +48,35 @@ uint64 uart_tx_r; // read next from uart_tx_buf[uart_tx_r % UART_TX_BUF_SIZE]
 
 extern volatile int panicked; // from printf.c
 
-// void uartstart();
+void uartstart();
 
-// void
-// uartinit(void)
-// {
-//   // disable interrupts.
-//   WriteReg(IER, 0x00);
+void
+uartinit(void)
+{
+  // disable interrupts.
+  WriteReg(IER, 0x00);
 
-//   // special mode to set baud rate.
-//   WriteReg(LCR, LCR_BAUD_LATCH);
+  // special mode to set baud rate.
+  WriteReg(LCR, LCR_BAUD_LATCH);
 
-//   // LSB for baud rate of 38.4K.
-//   WriteReg(0, 0x03);
+  // LSB for baud rate of 38.4K.
+  WriteReg(0, 0x03);
 
-//   // MSB for baud rate of 38.4K.
-//   WriteReg(1, 0x00);
+  // MSB for baud rate of 38.4K.
+  WriteReg(1, 0x00);
 
-//   // leave set-baud mode,
-//   // and set word length to 8 bits, no parity.
-//   WriteReg(LCR, LCR_EIGHT_BITS);
+  // leave set-baud mode,
+  // and set word length to 8 bits, no parity.
+  WriteReg(LCR, LCR_EIGHT_BITS);
 
-//   // reset and enable FIFOs.
-//   WriteReg(FCR, FCR_FIFO_ENABLE | FCR_FIFO_CLEAR);
+  // reset and enable FIFOs.
+  WriteReg(FCR, FCR_FIFO_ENABLE | FCR_FIFO_CLEAR);
 
-//   // enable transmit and receive interrupts.
-//   WriteReg(IER, IER_TX_ENABLE | IER_RX_ENABLE);
+  // enable transmit and receive interrupts.
+  WriteReg(IER, IER_TX_ENABLE | IER_RX_ENABLE);
 
-//   initlock(&uart_tx_lock, "uart");
-// }
+  initlock(&uart_tx_lock, "uart");
+}
 
 // add a character to the output buffer and tell the
 // UART to start sending if it isn't already.
@@ -84,25 +84,25 @@ extern volatile int panicked; // from printf.c
 // because it may block, it can't be called
 // from interrupts; it's only suitable for use
 // by write().
-// void
-// uartputc(int c)
-// {
-//   acquire(&uart_tx_lock);
+void
+uartputc(int c)
+{
+  acquire(&uart_tx_lock);
 
-//   if(panicked){
-//     for(;;)
-//       ;
-//   }
-//   while(uart_tx_w == uart_tx_r + UART_TX_BUF_SIZE){
-//     // buffer is full.
-//     // wait for uartstart() to open up space in the buffer.
-//     sleep(&uart_tx_r, &uart_tx_lock);
-//   }
-//   uart_tx_buf[uart_tx_w % UART_TX_BUF_SIZE] = c;
-//   uart_tx_w += 1;
-//   uartstart();
-//   release(&uart_tx_lock);
-// }
+  if(panicked){
+    for(;;)
+      ;
+  }
+  while(uart_tx_w == uart_tx_r + UART_TX_BUF_SIZE){
+    // buffer is full.
+    // wait for uartstart() to open up space in the buffer.
+    sleep(&uart_tx_r, &uart_tx_lock);
+  }
+  uart_tx_buf[uart_tx_w % UART_TX_BUF_SIZE] = c;
+  uart_tx_w += 1;
+  uartstart();
+  release(&uart_tx_lock);
+}
 
 
 // alternate version of uartputc() that doesn't 
@@ -131,62 +131,63 @@ uartputc_sync(int c)
 // in the transmit buffer, send it.
 // caller must hold uart_tx_lock.
 // called from both the top- and bottom-half.
-// void
-// uartstart()
-// {
-//   while(1){
-//     if(uart_tx_w == uart_tx_r){
-//       // transmit buffer is empty.
-//       ReadReg(ISR);
-//       return;
-//     }
+void
+uartstart()
+{
+  while(1){
+    if(uart_tx_w == uart_tx_r){
+      // transmit buffer is empty.
+      ReadReg(ISR);
+      return;
+    }
     
-//     if((ReadReg(LSR) & LSR_TX_IDLE) == 0){
-//       // the UART transmit holding register is full,
-//       // so we cannot give it another byte.
-//       // it will interrupt when it's ready for a new byte.
-//       return;
-//     }
+    if((ReadReg(LSR) & LSR_TX_IDLE) == 0){
+      // the UART transmit holding register is full,
+      // so we cannot give it another byte.
+      // it will interrupt when it's ready for a new byte.
+      return;
+    }
     
-//     int c = uart_tx_buf[uart_tx_r % UART_TX_BUF_SIZE];
-//     uart_tx_r += 1;
+    int c = uart_tx_buf[uart_tx_r % UART_TX_BUF_SIZE];
+    uart_tx_r += 1;
     
-//     // maybe uartputc() is waiting for space in the buffer.
-//     wakeup(&uart_tx_r);
+    // maybe uartputc() is waiting for space in the buffer.
+    wakeup(&uart_tx_r);
     
-//     WriteReg(THR, c);
-//   }
-// }
+    WriteReg(THR, c);
+  }
+}
 
-// // read one input character from the UART.
-// // return -1 if none is waiting.
-// int
-// uartgetc(void)
-// {
-//   if(ReadReg(LSR) & 0x01){
-//     // input data is ready.
-//     return ReadReg(RHR);
-//   } else {
-//     return -1;
-//   }
-// }
+// read one input character from the UART.
+// return -1 if none is waiting.
+int
+uartgetc(void)
+{
+  if(ReadReg(LSR) & 0x01){
+    // input data is ready.
+    return ReadReg(RHR);
+  } else {
+    return -1;
+  }
+}
 
 // handle a uart interrupt, raised because input has
 // arrived, or the uart is ready for more output, or
 // both. called from devintr().
-// void
-// uartintr(void)
-// {
-//   // read and process incoming characters.
-//   while(1){
-//     int c = uartgetc();
-//     if(c == -1)
-//       break;
-//     consoleintr(c);
-//   }
+void
+uartintr(void)
+{
+  // read and process incoming characters.
+  while(1){
+    int c = uartgetc();
+    if(c == -1)
+      break;
+    // consoleintr(c);
+    uartputc_sync(c);
+  }
 
-//   // send buffered characters.
-//   acquire(&uart_tx_lock);
-//   uartstart();
-//   release(&uart_tx_lock);
-// }
+  // send buffered characters.
+  acquire(&uart_tx_lock);
+  uartstart();
+  release(&uart_tx_lock);
+}

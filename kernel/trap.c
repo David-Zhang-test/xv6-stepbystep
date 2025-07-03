@@ -138,6 +138,8 @@ kerneltrap()
   uint64 sepc = r_sepc();
   uint64 sstatus = r_sstatus();
   uint64 scause = r_scause();
+
+  static int intr_time = 0;
   
   if((sstatus & SSTATUS_SPP) == 0)
     panic("kerneltrap: not from supervisor mode");
@@ -153,6 +155,13 @@ kerneltrap()
   // give up the CPU if this is a timer interrupt.
   if(which_dev == 2 && myproc() != 0)
     yield();
+    // printf("kerneltrap: yield not implemented\n");
+  if(which_dev == 2){
+    intr_time ++;
+    if (intr_time % 30 == 0)
+      printf("T");
+  }
+
 
   // the yield() may have caused some traps to occur,
   // so restore trap registers for use by kernelvec.S's sepc instruction.
@@ -195,7 +204,8 @@ devintr()
     if(irq == UART0_IRQ){
       uartintr();
     } else if(irq == VIRTIO0_IRQ){
-      virtio_disk_intr();
+      //virtio_disk_intr();
+      printf("virtio disk interrupt not implemented\n");
     } else if(irq){
       printf("unexpected interrupt irq=%d\n", irq);
     }
@@ -210,6 +220,7 @@ devintr()
   } else if(scause == 0x8000000000000005L){
     // timer interrupt.
     clockintr();
+    // printf("timer interrupt\n");
     return 2;
   } else {
     return 0;

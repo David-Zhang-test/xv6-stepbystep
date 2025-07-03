@@ -1,6 +1,12 @@
-
+struct proc;
 struct spinlock;
+struct context;
 
+
+// // console.c
+// void            consoleinit(void);
+// void            consoleintr(int);
+// void            consputc(int);
 
 
 // kalloc.c
@@ -15,7 +21,15 @@ void            proc_mapstacks(pagetable_t);
 struct proc*    myproc();
 void            wakeup(void*);
 void            yield(void);
+void            sched(void);
+int             killed(struct proc*);
+void            sleep(void*, struct spinlock*);
+int             either_copyout(int user_dst, uint64 dst, void *src, uint64 len);
+int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
+void            procdump(void);
 
+// swtch.S
+void            swtch(struct context*, struct context*);
 
 // spinlock.c
 void            acquire(struct spinlock*);
@@ -77,3 +91,7 @@ void            plicinit(void);
 void            plicinithart(void);
 int             plic_claim(void);
 void            plic_complete(int);
+
+
+// number of elements in fixed-size array
+#define NELEM(x) (sizeof(x)/sizeof((x)[0]))

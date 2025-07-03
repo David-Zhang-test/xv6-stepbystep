@@ -8,6 +8,7 @@ OBJS = \
   $K/uart.o \
   $K/spinlock.o \
   $K/main.o \
+  $K/swtch.o \
   $K/proc.o \
   $K/kalloc.o \
   $K/vm.o \
@@ -16,6 +17,7 @@ OBJS = \
   $K/kernelvec.o \
   $K/plic.o \
   $K/trap.o \
+  # $K/console.o \
   
 
 
