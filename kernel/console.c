@@ -22,35 +22,35 @@
 #include "defs.h"
 #include "proc.h"
 
-#define BACKSPACE 0x100
-#define C(x)  ((x)-'@')  // Control-x
+// #define BACKSPACE 0x100
+// #define C(x)  ((x)-'@')  // Control-x
 
 //
 // send one character to the uart.
 // called by printf(), and to echo input characters,
 // but not from write().
 //
-void
-consputc(int c)
-{
-  if(c == BACKSPACE){
-    // if the user typed backspace, overwrite with a space.
-    uartputc_sync('\b'); uartputc_sync(' '); uartputc_sync('\b');
-  } else {
-    uartputc_sync(c);
-  }
-}
+// void
+// consputc(int c)
+// {
+//   if(c == BACKSPACE){
+//     // if the user typed backspace, overwrite with a space.
+//     uartputc_sync('\b'); uartputc_sync(' '); uartputc_sync('\b');
+//   } else {
+//     uartputc_sync(c);
+//   }
+// }
 
-struct {
-  struct spinlock lock;
+// struct {
+//   struct spinlock lock;
   
-  // input
-#define INPUT_BUF_SIZE 128
-  char buf[INPUT_BUF_SIZE];
-  uint r;  // Read index
-  uint w;  // Write index
-  uint e;  // Edit index
-} cons;
+//   // input
+// #define INPUT_BUF_SIZE 128
+//   char buf[INPUT_BUF_SIZE];
+//   uint r;  // Read index
+//   uint w;  // Write index
+//   uint e;  // Edit index
+// } cons;
 
 //
 // user write()s to the console go here.

@@ -222,7 +222,7 @@ proc_freepagetable(pagetable_t pagetable, uint64 sz)
 // assembled from ../user/initcode.S
 // od -t xC ../user/initcode
 uchar initcode[] = {
-	0x13, 0x01, 0x01, 0xfe, 0x23, 0x3c, 0x11, 0x00, 0x23, 0x38, 0x81, 0x00, 
+0x13, 0x01, 0x01, 0xfe, 0x23, 0x3c, 0x11, 0x00, 0x23, 0x38, 0x81, 0x00, 
 	0x13, 0x04, 0x01, 0x02, 0xa3, 0x07, 0xb4, 0xfe, 0x13, 0x06, 0x10, 0x00, 
 	0x93, 0x05, 0xf4, 0xfe, 0x97, 0x10, 0x00, 0x00, 0xe7, 0x80, 0x80, 0x9d, 
 	0x83, 0x30, 0x81, 0x01, 0x03, 0x34, 0x01, 0x01, 0x13, 0x01, 0x01, 0x02, 
@@ -609,7 +609,7 @@ uchar initcode[] = {
 	0x04, 0x89, 0x06, 0x64, 0x92, 0x08, 0x93, 0x0a, 0x02, 0x48, 0xd2, 0xd3, 
 	0x60, 0x0a, 0xc9, 0x44, 0x0b, 0x48, 0x92, 0x08, 0x93, 0x0a, 0x02, 0xdc, 
 	0xd2, 0xd3, 0x60, 0xc9, 0x44, 0x89, 0x06, 0x92, 0x08, 0x93, 0x0a, 0x00, 
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 };
 
 // Set up first user process.
@@ -621,46 +621,89 @@ userinit(void)
   p = allocproc();
   initproc = p;
   
-  // allocate one user page and copy initcode's instructions
-  // and data into it.
-  uvmfirst(p->pagetable, initcode, sizeof(initcode));
-  p->sz = PGSIZE;
+  printf("initcode size: %ld bytes (PGSIZE: %d)\n", sizeof(initcode), PGSIZE);
+  
+  // Check if initcode is larger than one page
+  if(sizeof(initcode) > PGSIZE) {
+    // Handle large initcode manually
+    printf("initcode is larger than one page, handling manually\n");
+    
+    // Allocate first page for program
+    char *mem1 = kalloc();
+    if(mem1 == 0)
+      panic("userinit: out of memory for program page 1");
+    memset(mem1, 0, PGSIZE);
+    
+    // Copy first part of initcode
+    memmove(mem1, initcode, PGSIZE);
+    if(mappages(p->pagetable, 0, PGSIZE, (uint64)mem1, PTE_W|PTE_R|PTE_X|PTE_U) < 0){
+      kfree(mem1);
+      panic("userinit: can't map program page 1");
+    }
+    
+    // Allocate second page for remaining program
+    char *mem2 = kalloc();
+    if(mem2 == 0)
+      panic("userinit: out of memory for program page 2");
+    memset(mem2, 0, PGSIZE);
+    
+    // Copy remaining part of initcode
+    int remaining = sizeof(initcode) - PGSIZE;
+    memmove(mem2, initcode + PGSIZE, remaining);
+    if(mappages(p->pagetable, PGSIZE, PGSIZE, (uint64)mem2, PTE_W|PTE_R|PTE_X|PTE_U) < 0){
+      kfree(mem2);
+      panic("userinit: can't map program page 2");
+    }
+    
+    p->sz = 2*PGSIZE;  // Program now takes 2 pages
+    // printf("Program mapped: 2 pages (0x0000-0x1FFF)\n");
+    
+  } else {
+    // Use standard uvmfirst for small initcode
+    uvmfirst(p->pagetable, initcode, sizeof(initcode));
+    p->sz = PGSIZE;
+    // printf("Program mapped: 1 page using uvmfirst\n");
+  }
 
-  // 分配第1、2页作为全局数据区（需要初始化为0）
-  char *mem1 = kalloc();
-  if(mem1 == 0)
+  // 分配全局数据区（现在是第2、3页或第1、2页，取决于程序大小）
+  char *data1 = kalloc();
+  if(data1 == 0)
     panic("userinit: out of memory for global data page 1");
-  memset(mem1, 0, PGSIZE);  // 初始化为0
-  if(mappages(p->pagetable, PGSIZE, PGSIZE, (uint64)mem1, PTE_W|PTE_R|PTE_U) < 0){
-    kfree(mem1);
+  memset(data1, 0, PGSIZE);
+  if(mappages(p->pagetable, p->sz, PGSIZE, (uint64)data1, PTE_W|PTE_R|PTE_U) < 0){
+    kfree(data1);
     panic("userinit: can't map global data page 1");
   }
+  // printf("Global data page 1 mapped at 0x%lx\n", p->sz);
+  p->sz += PGSIZE;
 
-  char *mem2 = kalloc();
-  if(mem2 == 0)
+  char *data2 = kalloc();
+  if(data2 == 0)
     panic("userinit: out of memory for global data page 2");
-  memset(mem2, 0, PGSIZE);  // 初始化为0
-  if(mappages(p->pagetable, 2*PGSIZE, PGSIZE, (uint64)mem2, PTE_W|PTE_R|PTE_U) < 0){
-    kfree(mem2);
+  memset(data2, 0, PGSIZE);
+  if(mappages(p->pagetable, p->sz, PGSIZE, (uint64)data2, PTE_W|PTE_R|PTE_U) < 0){
+    kfree(data2);
     panic("userinit: can't map global data page 2");
   }
+  // printf("Global data page 2 mapped at 0x%lx\n", p->sz);
+  p->sz += PGSIZE;
 
-  // 分配第3页作为用户栈
+  // 分配用户栈
   char *stack = kalloc();
   if(stack == 0)
     panic("userinit: out of memory for stack");
-  memset(stack, 0, PGSIZE);  // 栈也初始化为0
-  if(mappages(p->pagetable, 3*PGSIZE, PGSIZE, (uint64)stack, PTE_W|PTE_R|PTE_U) < 0){
+  memset(stack, 0, PGSIZE);
+  if(mappages(p->pagetable, p->sz, PGSIZE, (uint64)stack, PTE_W|PTE_R|PTE_U) < 0){
     kfree(stack);
     panic("userinit: can't map stack page");
   }
-  p->sz = 4*PGSIZE;
+  // printf("User stack mapped at 0x%lx\n", p->sz);
+  uint64 stack_top = p->sz + PGSIZE;
+  p->sz += PGSIZE;
 
   // prepare for the very first "return" from kernel to user.
-  p->trapframe->epc = 0x6ec;      // user program counter
-  p->trapframe->sp = 4*PGSIZE;  // user stack pointer
-
-
+  p->trapframe->epc = 0x6ec;      // user program counter (from ELF entry point)
+  p->trapframe->sp = stack_top;   // user stack pointer
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   // p->cwd = namei("/");

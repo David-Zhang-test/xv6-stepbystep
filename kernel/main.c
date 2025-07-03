@@ -42,6 +42,6 @@ void main()
   plicinithart();   // ask PLIC for device interrupts
   }
 
-  intr_on(); // enable interrupts
-  while (1);
+  scheduler();
+
 }
