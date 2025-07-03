@@ -18,6 +18,7 @@ void            kinit(void);
 int             cpuid(void);
 struct cpu*     mycpu(void);
 void            proc_mapstacks(pagetable_t);
+pagetable_t     proc_pagetable(struct proc *);
 struct proc*    myproc();
 void            wakeup(void*);
 void            yield(void);
@@ -27,6 +28,8 @@ void            sleep(void*, struct spinlock*);
 int             either_copyout(int user_dst, uint64 dst, void *src, uint64 len);
 int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
 void            procdump(void);
+void            procinit(void);
+void            userinit(void);
 
 // swtch.S
 void            swtch(struct context*, struct context*);
@@ -58,6 +61,8 @@ extern uint     ticks;
 void            trapinit(void);
 void            trapinithart(void);
 extern struct spinlock tickslock;
+void            usertrapret(void);
+
 
 // uart.c
 void            uartinit(void);
