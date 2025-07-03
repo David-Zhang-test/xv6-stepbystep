@@ -19,6 +19,9 @@ OBJS = \
   $K/trap.o \
   $K/syscall.o \
   $K/sysproc.o \
+  $K/sysfile.o \
+  $K/console.o \
+  
 
   
 
