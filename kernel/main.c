@@ -26,13 +26,16 @@ void main()
     trapinithart();  // install kernel trap vector
     plicinit();      // set up interrupt controller
     plicinithart();  // ask PLIC for device interrupts
+    binit();         // buffer cache
+    virtio_disk_init(); // emulated hard disk
+    userinit();     // first user process
 
 
 
     printf("cpu %d is booting!\n", cpuid());
     __sync_synchronize();
     started = 1;
-    userinit();     // first user process
+    
   } else {
   while(started == 0);
   __sync_synchronize();

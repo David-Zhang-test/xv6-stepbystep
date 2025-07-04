@@ -271,6 +271,7 @@ int main()
     }
     if (pid == 0)
     {
+        write(3,0,0);
         while (1)
             ;
         exit(0);

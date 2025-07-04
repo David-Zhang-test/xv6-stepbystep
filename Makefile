@@ -21,6 +21,9 @@ OBJS = \
   $K/sysproc.o \
   $K/sysfile.o \
   $K/console.o \
+  $K/virtio_disk.o \
+  $K/bio.o \
+  $K/sleeplock.o \
   
 
   
@@ -86,6 +89,16 @@ $K/kernel: $(OBJS) $K/kernel.ld
 
 
 
+
+mkfs/mkfs: mkfs/mkfs.c $K/fs.h $K/param.h
+	gcc -Werror -Wall -I. -o mkfs/mkfs mkfs/mkfs.c
+
+
+UPROGS=\
+
+fs.img: mkfs/mkfs README $(UPROGS)
+	mkfs/mkfs fs.img README $(UPROGS)
+
 # Prevent deletion of intermediate files, e.g. cat.o, after first build, so
 # that disk image changes after first build are persistent until clean.  More
 # details:
@@ -113,11 +126,12 @@ endif
 
 QEMUOPTS = -machine virt -bios none -kernel $K/kernel -m 128M -smp $(CPUS) -nographic
 QEMUOPTS += -global virtio-mmio.force-legacy=false
-# QEMUOPTS += -drive file=fs.img,if=none,format=raw,id=x0
-# QEMUOPTS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
+QEMUOPTS += -drive file=fs.img,if=none,format=raw,id=x0
+QEMUOPTS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 
-qemu: $K/kernel
+qemu: $K/kernel fs.img
 	$(QEMU) $(QEMUOPTS)
+
 
 .gdbinit: .gdbinit.tmpl-riscv
 	sed "s/:1234/:$(GDBPORT)/" < $^ > $@

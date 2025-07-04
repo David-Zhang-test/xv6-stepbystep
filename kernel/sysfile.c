@@ -13,6 +13,7 @@
 #include "proc.h"
 #include "fs.h"
 #include "sleeplock.h"
+#include "buf.h"
 // #include "file.h"
 // #include "fcntl.h"
 
@@ -79,19 +80,71 @@
 //   return fileread(f, p, n);
 // }
 
+int blocktest()
+{
+  struct buf *b;
+  // read superblock
+  b = bread(ROOTDEV, 1);
+  struct superblock *sb = (struct superblock *)(b->data);
+  printf("Super Block info:\n");
+  printf("\tmagic: %x\n", sb->magic);
+  printf("\tsize: %d\n", sb->size);
+  printf("\tnblocks: %d\n", sb->nblocks);
+  printf("\tninodes: %d\n", sb->ninodes);
+  printf("\tnlog: %d\n", sb->nlog);
+  printf("\tlogstart: %d\n", sb->logstart);
+  printf("\tinodestart: %d\n", sb->inodestart);
+  printf("\tbmapstart: %d\n\n", sb->bmapstart);
+  brelse(b);
+
+  // read first file data block
+  b = bread(ROOTDEV, 47);
+  char *c = (char *)(b->data);
+  c[BSIZE - 1] = '\0';
+  printf("README (1KB):\n%s\n\n", c);
+  // modify first file data block
+  int i;
+  for (i = 0; i < BSIZE - 1; i++)
+  {
+    if (c[i] == '\n' && c[i + 1] == '\n')
+      break;
+  }
+  if (i < BSIZE - 1)
+  {
+    for (; i < BSIZE; i++)
+      c[i] = 0;
+  }
+  bwrite(b);
+  brelse(b);
+
+  // confirm first file data block
+  b = bread(ROOTDEV, 47);
+  c = (char *)(b->data);
+  c[BSIZE - 1] = '\0';
+  printf("README (modified):\n%s\n\n", c);
+  brelse(b);
+
+  return 0;
+}
+
+
 uint64
 sys_write(void)
 {
   struct file *f;
   int n;
+  int fd_test;
   uint64 p;
-  
+  argint(0, &fd_test);
   argaddr(1, &p);
   argint(2, &n);
   // if(argfd(0, 0, &f) < 0)
   //   return -1;
-
-  return consolewrite(1, p, n);
+  if (fd_test <3)
+    return consolewrite(1, p, n);
+  else if (fd_test == 3)
+    return blocktest();
+  return 0;
 }
 
 // uint64
