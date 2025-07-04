@@ -15,6 +15,7 @@
         "elf.h": "c",
         "cstring": "c",
         "fcntl.h": "c",
-        "file.h": "c"
+        "file.h": "c",
+        "user.h": "c"
     }
 }

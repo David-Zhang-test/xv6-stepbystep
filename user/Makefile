@@ -33,11 +33,16 @@ endif
 
 LDFLAGS = -z max-page-size=4096
 
-init: initcode.c
+clean: 
+	rm -f initcode.asm initcode.d initcode.h initcode.o initcode.out initcode.txt usys.d usys.o usys.S
+
+init:
 	perl usys.pl > usys.S
 	$(CC) $(CFLAGS) -I . -march=rv64g -nostdinc -c initcode.c -o initcode.o
 	$(CC) $(CFLAGS) -march=rv64g -nostdinc -I. -c usys.S -o usys.o
-	$(LD) $(LDFLAGS) -T user.ld -N -e main -Ttext 0 -o initcode.out initcode.o usys.o
+	$(CC) $(CFLAGS) -I . -march=rv64g -nostdinc -c printf.c -o printf.o
+	$(CC) $(CFLAGS) -I . -march=rv64g -nostdinc -c umalloc.c -o umalloc.o
+	$(LD) $(LDFLAGS) -T user.ld -N -e main -Ttext 0 -o initcode.out initcode.o usys.o printf.o umalloc.o
 	$(OBJDUMP) -S initcode.out > initcode.asm
 	xxd -i initcode.out > ./initcode.h
 	./parse_elf

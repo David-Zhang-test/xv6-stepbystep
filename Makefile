@@ -98,21 +98,32 @@ $K/kernel: $(OBJS) $K/kernel.ld
 # 	$(OBJCOPY) -S -O binary $U/initcode.out $U/initcode
 # 	$(OBJDUMP) -S $U/initcode.o > $U/initcode.asm
 
-# tags: $(OBJS) _init
-# 	etags *.S *.c
+tags: $(OBJS) _init
+	etags *.S *.c
 
-# ULIB = $U/ulib.o $U/usys.o $U/printf.o $U/umalloc.o
+ULIB = $U/usys.o $U/printf.o $U/umalloc.o
 
-# _%: %.o $(ULIB)
-# 	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $^
-# 	$(OBJDUMP) -S $@ > $*.asm
-# 	$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $*.sym
+$U/%.o: $U/%.c
+	$(CC) $(CFLAGS) -c -o $@ $<  
+
+# Make sure individual library objects are built (fix indentation with TABS)
+$U/printf.o: $U/printf.c
+	$(CC) $(CFLAGS) -c -o $U/printf.o $U/printf.c
+
+$U/umalloc.o: $U/umalloc.c
+	$(CC) $(CFLAGS) -c -o $U/umalloc.o $U/umalloc.c
+
+# Fix the user program linking rule (use TABS not spaces)
+$U/%: $U/%.o $(ULIB)
+	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $^
+	$(OBJDUMP) -S $@ > $U/$*.asm
+	$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $U/$*.sym
 
 $U/usys.S : $U/usys.pl
 	perl $U/usys.pl > $U/usys.S
 
-# $U/usys.o : $U/usys.S
-# 	$(CC) $(CFLAGS) -c -o $U/usys.o $U/usys.S
+$U/usys.o : $U/usys.S
+	$(CC) $(CFLAGS) -c -o $U/usys.o $U/usys.S
 
 
 
@@ -126,7 +137,8 @@ mkfs/mkfs: mkfs/mkfs.c $K/fs.h $K/param.h
 .PRECIOUS: %.o
 
 UPROGS=\
-#   $U/_execchild1\
+   $U/execchild1\
+   $U/execchild2\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
