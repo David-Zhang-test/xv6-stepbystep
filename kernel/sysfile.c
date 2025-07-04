@@ -14,8 +14,8 @@
 #include "fs.h"
 #include "sleeplock.h"
 #include "buf.h"
-// #include "file.h"
-// #include "fcntl.h"
+#include "file.h"
+#include "fcntl.h"
 
 // // Fetch the nth word-sized system call argument as a file descriptor
 // // and return both the descriptor and the corresponding struct file.
@@ -66,19 +66,19 @@
 //   return fd;
 // }
 
-// uint64
-// sys_read(void)
-// {
-//   struct file *f;
-//   int n;
-//   uint64 p;
+uint64
+sys_read(void)
+{
+  struct file *f;
+  int n;
+  uint64 p;
 
-//   argaddr(1, &p);
-//   argint(2, &n);
-//   if(argfd(0, 0, &f) < 0)
-//     return -1;
-//   return fileread(f, p, n);
-// }
+  argaddr(1, &p);
+  argint(2, &n);
+  // if(argfd(0, 0, &f) < 0)
+  //   return -1;
+  return consoleread(1, p, n);
+}
 
 int blocktest()
 {
@@ -459,30 +459,30 @@ sys_write(void)
 //   return 0;
 // }
 
-// uint64
-// sys_chdir(void)
-// {
-//   char path[MAXPATH];
-//   struct inode *ip;
-//   struct proc *p = myproc();
+uint64
+sys_chdir(void)
+{
+  char path[MAXPATH];
+  struct inode *ip;
+  struct proc *p = myproc();
   
-//   begin_op();
-//   if(argstr(0, path, MAXPATH) < 0 || (ip = namei(path)) == 0){
-//     end_op();
-//     return -1;
-//   }
-//   ilock(ip);
-//   if(ip->type != T_DIR){
-//     iunlockput(ip);
-//     end_op();
-//     return -1;
-//   }
-//   iunlock(ip);
-//   iput(p->cwd);
-//   end_op();
-//   p->cwd = ip;
-//   return 0;
-// }
+  begin_op();
+  if(argstr(0, path, MAXPATH) < 0 || (ip = namei(path)) == 0){
+    end_op();
+    return -1;
+  }
+  ilock(ip);
+  if(ip->type != T_DIR){
+    iunlockput(ip);
+    end_op();
+    return -1;
+  }
+  iunlock(ip);
+  iput(p->cwd);
+  end_op();
+  p->cwd = ip;
+  return 0;
+}
 
 uint64
 sys_exec(void)

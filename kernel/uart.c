@@ -182,8 +182,8 @@ uartintr(void)
     int c = uartgetc();
     if(c == -1)
       break;
-    // consoleintr(c);
-    uartputc_sync(c);
+    consoleintr(c);
+    //uartputc_sync(c);
   }
 
   // send buffered characters.

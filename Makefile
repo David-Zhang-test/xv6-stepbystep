@@ -85,46 +85,34 @@ endif
 
 LDFLAGS = -z max-page-size=4096
 
-$K/kernel: $(OBJS) $K/kernel.ld
+$K/kernel: $(OBJS) $K/kernel.ld $U/initcode
 	$(LD) $(LDFLAGS) -T $K/kernel.ld -o $K/kernel $(OBJS) 
 	$(OBJDUMP) -S $K/kernel > $K/kernel.asm
 	$(OBJDUMP) -t $K/kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $K/kernel.sym
 
 
 
-# $U/initcode: $U/initcode.S
-# 	$(CC) $(CFLAGS) -march=rv64g -nostdinc -I. -Ikernel -c $U/initcode.S -o $U/initcode.o
-# 	$(LD) $(LDFLAGS) -N -e start -Ttext 0 -o $U/initcode.out $U/initcode.o
-# 	$(OBJCOPY) -S -O binary $U/initcode.out $U/initcode
-# 	$(OBJDUMP) -S $U/initcode.o > $U/initcode.asm
+$U/initcode: $U/initcode.S
+	$(CC) $(CFLAGS) -march=rv64g -nostdinc -I. -Ikernel -c $U/initcode.S -o $U/initcode.o
+	$(LD) $(LDFLAGS) -N -e start -Ttext 0 -o $U/initcode.out $U/initcode.o
+	$(OBJCOPY) -S -O binary $U/initcode.out $U/initcode
+	$(OBJDUMP) -S $U/initcode.o > $U/initcode.asm
 
 tags: $(OBJS) _init
 	etags *.S *.c
 
-ULIB = $U/usys.o $U/printf.o $U/umalloc.o
+ULIB = $U/ulib.o $U/usys.o $U/printf.o $U/umalloc.o
 
-$U/%.o: $U/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<  
-
-# Make sure individual library objects are built (fix indentation with TABS)
-$U/printf.o: $U/printf.c
-	$(CC) $(CFLAGS) -c -o $U/printf.o $U/printf.c
-
-$U/umalloc.o: $U/umalloc.c
-	$(CC) $(CFLAGS) -c -o $U/umalloc.o $U/umalloc.c
-
-# Fix the user program linking rule (use TABS not spaces)
-$U/%: $U/%.o $(ULIB)
+_%: %.o $(ULIB)
 	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $^
-	$(OBJDUMP) -S $@ > $U/$*.asm
-	$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $U/$*.sym
+	$(OBJDUMP) -S $@ > $*.asm
+	$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $*.sym
 
 $U/usys.S : $U/usys.pl
 	perl $U/usys.pl > $U/usys.S
 
 $U/usys.o : $U/usys.S
 	$(CC) $(CFLAGS) -c -o $U/usys.o $U/usys.S
-
 
 
 mkfs/mkfs: mkfs/mkfs.c $K/fs.h $K/param.h
@@ -137,8 +125,11 @@ mkfs/mkfs: mkfs/mkfs.c $K/fs.h $K/param.h
 .PRECIOUS: %.o
 
 UPROGS=\
-   $U/execchild1\
-   $U/execchild2\
+   $U/_execchild1\
+   $U/_execchild2\
+   $U/_init\
+   $U/_sh\
+   $U/_test\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

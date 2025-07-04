@@ -66,7 +66,6 @@ int main()
 		printf("[pid: %d] wait - pid: %d - exit code: %d\n", getpid(), pid, xstate);
 	}
 	printf("[pid: %d] uptime: %d, init process has no child now, over!\n", getpid(), uptime());
-	while (1)
-		;
+
 	exit(0);
 }

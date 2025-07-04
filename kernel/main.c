@@ -11,7 +11,7 @@ void main()
 {
   if(cpuid() == 0) {
     // 此处为调用 printf()执行必要的初始化
-    uartinit();
+    consoleinit();
     printfinit();
     printf("\n");
     printf("xv6 kernel is booting\n");

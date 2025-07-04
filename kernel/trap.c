@@ -154,14 +154,14 @@ kerneltrap()
   }
 
   // give up the CPU if this is a timer interrupt.
-  // if(which_dev == 2 && myproc() != 0)
-  //   yield();
+  if(which_dev == 2 && myproc() != 0)
+    yield();
     // printf("kerneltrap: yield not implemented\n");
-  if(which_dev == 2){
-    intr_time ++;
-    if (intr_time % 30 == 0)
-      printf("T");
-  }
+  // if(which_dev == 2){
+  //   intr_time ++;
+  //   if (intr_time % 30 == 0)
+  //     printf("T");
+  // }
 
 
   // the yield() may have caused some traps to occur,
