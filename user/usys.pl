@@ -23,7 +23,7 @@ entry("wait");
 entry("write");
 #entry("close");
 entry("kill");
-#entry("exec");
+entry("exec");
 #entry("open");
 #entry("mknod");
 #entry("unlink");

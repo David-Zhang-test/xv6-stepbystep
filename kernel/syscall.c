@@ -86,7 +86,7 @@ extern uint64 sys_wait(void);
 // extern uint64 sys_pipe(void);
 // extern uint64 sys_read(void);
 extern uint64 sys_kill(void);
-// extern uint64 sys_exec(void);
+extern uint64 sys_exec(void);
 // extern uint64 sys_fstat(void);
 // extern uint64 sys_chdir(void);
 // extern uint64 sys_dup(void);
@@ -111,7 +111,7 @@ static uint64 (*syscalls[])(void) = {
 // [SYS_pipe]    sys_pipe,
 // [SYS_read]    sys_read,
 [SYS_kill]    sys_kill,
-// [SYS_exec]    sys_exec,
+[SYS_exec]    sys_exec,
 // [SYS_fstat]   sys_fstat,
 // [SYS_chdir]   sys_chdir,
 // [SYS_dup]     sys_dup,

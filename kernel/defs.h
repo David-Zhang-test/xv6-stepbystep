@@ -1,9 +1,12 @@
 struct buf;
 struct proc;
 struct spinlock;
+struct inode;
 struct context;
 struct cpu;
 struct sleeplock;
+struct stat;
+struct superblock;
 
 // bio.c
 void            binit(void);
@@ -20,10 +23,40 @@ void            bunpin(struct buf*);
 // void            consputc(int);
 int consolewrite(int user_src, uint64 src, int n);
 
+// exec.c
+int             exec(char*, char**);
+
+// fs.c
+void            fsinit(int);
+int             dirlink(struct inode*, char*, uint);
+struct inode*   dirlookup(struct inode*, char*, uint*);
+struct inode*   ialloc(uint, short);
+struct inode*   idup(struct inode*);
+void            iinit();
+void            ilock(struct inode*);
+void            iput(struct inode*);
+void            iunlock(struct inode*);
+void            iunlockput(struct inode*);
+void            iupdate(struct inode*);
+int             namecmp(const char*, const char*);
+struct inode*   namei(char*);
+struct inode*   nameiparent(char*, char*);
+int             readi(struct inode*, int, uint64, uint, uint);
+void            stati(struct inode*, struct stat*);
+int             writei(struct inode*, int, uint64, uint, uint);
+void            itrunc(struct inode*);
+
+
 // kalloc.c
 void*           kalloc(void);
 void            kfree(void *);
 void            kinit(void);
+
+// log.c
+void            initlog(int, struct superblock*);
+void            log_write(struct buf*);
+void            begin_op(void);
+void            end_op(void);
 
 // proc.c
 int             cpuid(void);

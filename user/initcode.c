@@ -10,6 +10,7 @@ extern int getpid(void);
 extern char *sbrk(int);
 extern int sleep(int);
 extern int uptime(void);
+extern int exec(const char*, char**);
 
 // -----------------------------------------------------------------------
 //                               sbrk相关
@@ -271,9 +272,8 @@ int main()
     }
     if (pid == 0)
     {
-        write(3,0,0);
-        while (1)
-            ;
+        char *argv[] = {"execchild1", 0};
+        exec("execchild1", argv);
         exit(0);
     }
     to_be_killed = pid;

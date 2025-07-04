@@ -24,6 +24,9 @@ OBJS = \
   $K/virtio_disk.o \
   $K/bio.o \
   $K/sleeplock.o \
+  $K/exec.o \
+  $K/fs.o \
+  $K/log.o \
   
 
   
@@ -89,20 +92,45 @@ $K/kernel: $(OBJS) $K/kernel.ld
 
 
 
+# $U/initcode: $U/initcode.S
+# 	$(CC) $(CFLAGS) -march=rv64g -nostdinc -I. -Ikernel -c $U/initcode.S -o $U/initcode.o
+# 	$(LD) $(LDFLAGS) -N -e start -Ttext 0 -o $U/initcode.out $U/initcode.o
+# 	$(OBJCOPY) -S -O binary $U/initcode.out $U/initcode
+# 	$(OBJDUMP) -S $U/initcode.o > $U/initcode.asm
+
+# tags: $(OBJS) _init
+# 	etags *.S *.c
+
+# ULIB = $U/ulib.o $U/usys.o $U/printf.o $U/umalloc.o
+
+# _%: %.o $(ULIB)
+# 	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $^
+# 	$(OBJDUMP) -S $@ > $*.asm
+# 	$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $*.sym
+
+$U/usys.S : $U/usys.pl
+	perl $U/usys.pl > $U/usys.S
+
+# $U/usys.o : $U/usys.S
+# 	$(CC) $(CFLAGS) -c -o $U/usys.o $U/usys.S
+
+
 
 mkfs/mkfs: mkfs/mkfs.c $K/fs.h $K/param.h
 	gcc -Werror -Wall -I. -o mkfs/mkfs mkfs/mkfs.c
-
-
-UPROGS=\
-
-fs.img: mkfs/mkfs README $(UPROGS)
-	mkfs/mkfs fs.img README $(UPROGS)
 
 # Prevent deletion of intermediate files, e.g. cat.o, after first build, so
 # that disk image changes after first build are persistent until clean.  More
 # details:
 # http://www.gnu.org/software/make/manual/html_node/Chained-Rules.html
+.PRECIOUS: %.o
+
+UPROGS=\
+#   $U/_execchild1\
+
+fs.img: mkfs/mkfs README $(UPROGS)
+	mkfs/mkfs fs.img README $(UPROGS)
+
 
 -include kernel/*.d user/*.d
 
